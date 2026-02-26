@@ -37,6 +37,7 @@ words:
   - testpaths
   - pyproject
   # Python / general
+  - isinstance
   - docstrings
   - pycache
   - htmlcov

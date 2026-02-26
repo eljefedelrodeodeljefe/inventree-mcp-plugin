@@ -186,95 +186,105 @@ cmd_token() {
     esac
 }
 
+_smoke_pass() { echo "PASS"; }
+_smoke_fail() { echo "FAIL"; echo "  Response: $1"; }
+
+# Assert a JSON-RPC tool call response has isError:false and the content is a list.
+_assert_tool_list() {
+    python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+assert 'result' in d, 'no result key'
+assert not d['result']['isError'], 'isError is true: ' + str(d['result'])
+content = json.loads(d['result']['content'][0]['text'])
+assert isinstance(content, list), 'content is not a list: ' + type(content).__name__
+print(len(content))
+" 2>/dev/null
+}
+
+# Assert a JSON-RPC tool call response has isError:false (for non-list returns).
+_assert_tool_ok() {
+    python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+assert 'result' in d, 'no result key'
+assert not d['result']['isError'], 'isError is true: ' + str(d['result'])
+" 2>/dev/null
+}
+
 cmd_smoke() {
     echo "Running MCP smoke tests..."
     echo ""
 
     local token
     token=$(_get_token)
-    local auth_header="Authorization: Token ${token}"
+    local auth="Authorization: Token ${token}"
+    local ct="Content-Type: application/json"
+    local accept="Accept: application/json"
     local pass=0
     local fail=0
+    local resp
 
     # --- Test 1: Unauthenticated request should be rejected ---
     echo -n "1. Unauthenticated request returns 401... "
     local status
     status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${MCP_URL}" \
-        -H "Content-Type: application/json" \
-        -H "Accept: application/json" \
+        -H "$ct" -H "$accept" \
         -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"test","version":"0.1.0"}}}')
     if [ "$status" = "401" ]; then
-        echo "PASS"
-        pass=$((pass + 1))
+        _smoke_pass; pass=$((pass + 1))
     else
-        echo "FAIL (got ${status})"
-        fail=$((fail + 1))
+        _smoke_fail "(got ${status})"; fail=$((fail + 1))
     fi
 
     # --- Test 2: Authenticated initialize ---
     echo -n "2. Authenticated initialize... "
-    local resp
-    resp=$(curl -sf -X POST "${MCP_URL}" \
-        -H "Content-Type: application/json" \
-        -H "Accept: application/json" \
-        -H "${auth_header}" \
-        -d '{
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2025-03-26",
-                "capabilities": {},
-                "clientInfo": { "name": "smoke-test", "version": "0.1.0" }
-            }
-        }' 2>&1) || true
+    resp=$(curl -sf -X POST "${MCP_URL}" -H "$ct" -H "$accept" -H "$auth" \
+        -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"smoke-test","version":"0.1.0"}}}' \
+        2>&1) || true
     if echo "$resp" | python3 -c "import sys,json; d=json.load(sys.stdin); assert 'result' in d" 2>/dev/null; then
-        echo "PASS"
-        pass=$((pass + 1))
+        _smoke_pass; pass=$((pass + 1))
     else
-        echo "FAIL"
-        echo "  Response: ${resp}"
-        fail=$((fail + 1))
+        _smoke_fail "$resp"; fail=$((fail + 1))
     fi
 
     # --- Test 3: Authenticated tools/list ---
-    echo -n "3. Authenticated tools/list returns tools... "
-    resp=$(curl -sf -X POST "${MCP_URL}" \
-        -H "Content-Type: application/json" \
-        -H "Accept: application/json" \
-        -H "${auth_header}" \
+    echo -n "3. tools/list returns 26 tools... "
+    resp=$(curl -sf -X POST "${MCP_URL}" -H "$ct" -H "$accept" -H "$auth" \
         -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' 2>&1) || true
-    if echo "$resp" | python3 -c "import sys,json; d=json.load(sys.stdin); assert len(d['result']['tools']) > 0" 2>/dev/null; then
-        local tool_count
-        tool_count=$(echo "$resp" | python3 -c "import sys,json; print(len(json.load(sys.stdin)['result']['tools']))")
-        echo "PASS (${tool_count} tools)"
-        pass=$((pass + 1))
+    if echo "$resp" | python3 -c "import sys,json; d=json.load(sys.stdin); assert len(d['result']['tools']) == 26" 2>/dev/null; then
+        _smoke_pass; pass=$((pass + 1))
     else
-        echo "FAIL"
-        echo "  Response: ${resp}"
-        fail=$((fail + 1))
+        local tool_count
+        tool_count=$(echo "$resp" | python3 -c "import sys,json; print(len(json.load(sys.stdin).get('result',{}).get('tools',[])))" 2>/dev/null || echo "?")
+        _smoke_fail "got ${tool_count} tools — expected 26"; fail=$((fail + 1))
     fi
 
-    # --- Test 4: Authenticated tools/call (list_parts) ---
-    echo -n "4. Authenticated tools/call list_parts... "
-    resp=$(curl -sf -X POST "${MCP_URL}" \
-        -H "Content-Type: application/json" \
-        -H "Accept: application/json" \
-        -H "${auth_header}" \
-        -d '{
-            "jsonrpc": "2.0",
-            "id": 3,
-            "method": "tools/call",
-            "params": { "name": "list_parts", "arguments": { "limit": 3 } }
-        }' 2>&1) || true
-    if echo "$resp" | python3 -c "import sys,json; d=json.load(sys.stdin); assert 'result' in d" 2>/dev/null; then
-        echo "PASS"
-        pass=$((pass + 1))
-    else
-        echo "FAIL"
-        echo "  Response: ${resp}"
-        fail=$((fail + 1))
-    fi
+    # --- Tests 4–12: tools/call for every domain ---
+    _smoke_call() {
+        local num="$1" label="$2" tool="$3" args="$4"
+        echo -n "${num}. tools/call ${label}... "
+        resp=$(curl -sf -X POST "${MCP_URL}" -H "$ct" -H "$accept" -H "$auth" \
+            -d "{\"jsonrpc\":\"2.0\",\"id\":${num},\"method\":\"tools/call\",\"params\":{\"name\":\"${tool}\",\"arguments\":${args}}}" \
+            2>&1) || true
+        local count
+        count=$(echo "$resp" | _assert_tool_list 2>/dev/null) || count=""
+        if [ -n "$count" ]; then
+            echo "PASS (${count} items)"; pass=$((pass + 1))
+        else
+            _smoke_fail "$resp"; fail=$((fail + 1))
+        fi
+    }
+
+    _smoke_call  4 "list_parts"           list_parts           '{"limit":5}'
+    _smoke_call  5 "search_parts"         search_parts         '{"query":"r","limit":5}'
+    _smoke_call  6 "list_categories"      list_categories      '{"limit":5}'
+    _smoke_call  7 "list_stock_items"     list_stock_items     '{"limit":5}'
+    _smoke_call  8 "list_locations"       list_locations       '{"limit":5}'
+    _smoke_call  9 "list_purchase_orders" list_purchase_orders '{"limit":5}'
+    _smoke_call 10 "list_sales_orders"    list_sales_orders    '{"limit":5}'
+    _smoke_call 11 "list_build_orders"    list_build_orders    '{"limit":5}'
+    _smoke_call 12 "list_bom_items"       list_bom_items       '{"limit":5}'
 
     # --- Summary ---
     echo ""

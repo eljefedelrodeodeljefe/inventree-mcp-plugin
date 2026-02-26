@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 def django_orm(fn: Callable[..., Any]) -> Callable[..., Any]:
     """Wrap a sync tool function to run in a thread pool for Django ORM compatibility."""
-    async_fn = sync_to_async(fn)
+    async_fn = sync_to_async(fn, thread_sensitive=False)
 
     @wraps(fn)
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
