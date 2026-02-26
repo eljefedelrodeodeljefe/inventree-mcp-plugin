@@ -11,6 +11,7 @@ MCP (Model Context Protocol) server plugin for [InvenTree](https://inventree.org
 - **Orders**: View purchase and sales orders
 - **BOM**: View bill of materials for assemblies
 - **Builds**: View build orders
+- **Tags**: List and search part tags
 
 ## Installation
 
@@ -122,6 +123,7 @@ curl -s http://your-inventree-instance/api/user/token/ \
 | `list_parts`, `get_part`, `search_parts` | Part | view |
 | `create_part` | Part, Part Category | add (part), view (category) |
 | `update_part` | Part | change |
+| `delete_parts` | Part | delete |
 | `list_stock_items`, `get_stock_item` | Stock Item | view |
 | `adjust_stock` | Stock Item | change |
 | `transfer_stock` | Stock Item, Stock Location | change (stock), view (location) |
@@ -131,6 +133,7 @@ curl -s http://your-inventree-instance/api/user/token/ \
 | `list_sales_orders`, `get_sales_order` | Sales Order | view |
 | `list_bom_items`, `get_bom_for_part` | Part | view |
 | `list_build_orders`, `get_build_order` | Build | view |
+| `list_tags`, `search_tags` | — | view |
 
 ## Usage with MCP Clients
 
@@ -270,6 +273,7 @@ Common prompts to use once the MCP is connected to your AI assistant. Paste them
 | `search_parts` | Search parts by name or description |
 | `create_part` | Create a new part |
 | `update_part` | Update an existing part |
+| `delete_parts` | Delete multiple parts by ID (with safety checks) |
 | `list_stock_items` | List stock items with optional filters |
 | `get_stock_item` | Get detailed stock item information |
 | `adjust_stock` | Add or remove stock quantity |
@@ -288,6 +292,8 @@ Common prompts to use once the MCP is connected to your AI assistant. Paste them
 | `get_bom_for_part` | Get full BOM for a part |
 | `list_build_orders` | List build orders |
 | `get_build_order` | Get build order details |
+| `list_tags` | List all tags |
+| `search_tags` | Search tags by name |
 
 ## Development
 
