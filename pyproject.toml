@@ -45,6 +45,20 @@ testpaths = ["tests"]
 dev = [
     "django-types>=0.23.0",
     "mypy>=1.0",
+    "python-semantic-release>=9.0",
     "pytest>=9.0.2",
     "ruff>=0.15.2",
 ]
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+commit_message = "chore(release): {version}"
+build_command = ""
+
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "CHANGELOG.md"
+
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease = false

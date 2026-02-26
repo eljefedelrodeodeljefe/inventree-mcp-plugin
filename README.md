@@ -134,25 +134,132 @@ curl -s http://your-inventree-instance/api/user/token/ \
 
 ## Usage with MCP Clients
 
-Configure your MCP client to connect via Streamable HTTP transport. Include the API token in the request headers:
+The plugin uses the **Streamable HTTP** transport. The endpoint is:
+
+```text
+http://your-inventree-instance/plugin/inventree-mcp/mcp/
+```
+
+Every request must include an `Authorization` header with an InvenTree API token (see [Authentication](#authentication)).
+
+### Claude Code
+
+Add the server with the `claude mcp add` command. Use `--scope project` to store the config in `.mcp.json` (checked into the repo) or omit it for local-only config.
+
+```bash
+claude mcp add --transport http inventree \
+  --header "Authorization: Token YOUR_INVENTREE_TOKEN" \
+  http://your-inventree-instance/plugin/inventree-mcp/mcp/
+```
+
+To avoid storing the token in plain text, use an environment variable:
+
+```bash
+claude mcp add --transport http inventree \
+  --header "Authorization: Token ${INVENTREE_TOKEN}" \
+  http://your-inventree-instance/plugin/inventree-mcp/mcp/
+```
+
+Or add the config manually to `.mcp.json` (project scope) or `~/.claude.json` (user scope):
 
 ```json
 {
   "mcpServers": {
     "inventree": {
-      "transport": {
-        "type": "streamable-http",
-        "url": "http://your-inventree-instance/plugin/inventree-mcp/mcp/"
-      },
-      "requestInit": {
-        "headers": {
-          "Authorization": "Token <your-inventree-token>"
-        }
+      "type": "http",
+      "url": "http://your-inventree-instance/plugin/inventree-mcp/mcp/",
+      "headers": {
+        "Authorization": "Token YOUR_INVENTREE_TOKEN"
       }
     }
   }
 }
 ```
+
+### Claude Desktop
+
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "inventree": {
+      "type": "http",
+      "url": "http://your-inventree-instance/plugin/inventree-mcp/mcp/",
+      "headers": {
+        "Authorization": "Token YOUR_INVENTREE_TOKEN"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop after editing the config file.
+
+### Gemini CLI
+
+Google's [Gemini CLI](https://github.com/google-gemini/gemini-cli) supports MCP servers. Add the server via the settings file at `~/.gemini/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "inventree": {
+      "httpUrl": "http://your-inventree-instance/plugin/inventree-mcp/mcp/",
+      "headers": {
+        "Authorization": "Token YOUR_INVENTREE_TOKEN"
+      }
+    }
+  }
+}
+```
+
+### ChatGPT Desktop
+
+ChatGPT Desktop supports MCP in Developer Mode (requires ChatGPT Plus, Pro, Business, or Enterprise). Enable Developer Mode under **Settings > Advanced**, then add the server via **Settings > Connectors**.
+
+When adding a custom connector, provide:
+
+- **URL:** `http://your-inventree-instance/plugin/inventree-mcp/mcp/`
+- **Authentication:** Token — value: `YOUR_INVENTREE_TOKEN`
+
+## Use Cases
+
+Common prompts to use once the MCP is connected to your AI assistant. Paste them as-is — your AI will use the InvenTree MCP tools automatically rather than making raw HTTP requests.
+
+### Exploring inventory
+
+- *Show me the top-level part categories and how many subcategories each one has.*
+- *List all parts in the "Passives" category. Group them by subcategory and tell me which ones are currently inactive.*
+- *Search for anything related to "motor driver" across part names and descriptions.*
+- *Give me the full category tree so I can understand how the inventory is organised.*
+
+### Stock levels
+
+- *Which parts have zero stock right now? List their names, IDs and categories.*
+- *Show me all stock items stored in the "Main Warehouse" location and its sub-locations.*
+- *I need to transfer 50 units of part #142 from "Shelf A" to "Shelf B". Do it and confirm.*
+- *Adjust stock for part #88 — add 200 units to reflect a new delivery.*
+
+### Parts and BOMs
+
+- *Get the full bill of materials for part #210 and estimate the total component count needed to build 25 units.*
+- *What sub-assemblies does part #305 depend on? Show the BOM tree.*
+- *Create a new part called "Schottky Diode 40V 1A" in category #12 with IPN "D-SS14" and mark it as purchaseable.*
+- *Find all parts tagged "obsolete" and deactivate them. Show me the list before making any changes.*
+
+### Orders and builds
+
+- *List all open purchase orders and summarise what's being ordered and from which suppliers.*
+- *What's the status of current build orders? Are any overdue or blocked?*
+- *Show me the line items for purchase order #34 and tell me which parts haven't been received yet.*
+- *Which sales orders have been placed in the last 30 days and what's their status?*
+
+### Cleanup and maintenance
+
+- *Find all parts that are inactive and have no stock. Delete them after confirming the list with me.*
+- *List all tags currently in use and tell me which ones are applied to fewer than 3 parts — those might be duplicates or typos.*
+- *Show me all parts that are marked as assemblies but have an empty BOM.*
 
 ## Available Tools
 
@@ -340,6 +447,38 @@ curl -X POST http://localhost:8000/plugin/inventree-mcp/mcp/ \
 ./scripts/integration-test.sh smoke            # Run authenticated smoke tests
 ./scripts/integration-test.sh status           # Check if InvenTree is healthy
 ./scripts/integration-test.sh down             # Tear down + delete volumes
+```
+
+## Releasing
+
+Releases are automated with [python-semantic-release](https://python-semantic-release.readthedocs.io/). It parses Conventional Commit messages since the last tag, determines the next version bump (`patch`, `minor`, or `major`), updates the version in `pyproject.toml`, generates `CHANGELOG.md`, creates a git tag, and publishes a GitHub release.
+
+The workflow requires manual trigger to avoid creating releases on every merge to `main`.
+
+### From the GitHub UI
+
+1. Go to **Actions → Release**
+2. Click **Run workflow**
+3. Select the `main` branch and confirm
+
+### From the command line
+
+```bash
+gh workflow run release.yml --ref main
+```
+
+To watch the run until it completes:
+
+```bash
+gh workflow run release.yml --ref main && gh run watch --exit-status
+```
+
+### Local dry-run
+
+Preview what the next version would be without making any changes:
+
+```bash
+uv run semantic-release version --print
 ```
 
 ## License

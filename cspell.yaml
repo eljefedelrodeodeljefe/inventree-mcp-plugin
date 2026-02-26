@@ -15,6 +15,7 @@ words:
   - asgi
   - streamable
   # InvenTree-specific
+  - Schottky
   - bom
   - pathstring
   - allaccess
@@ -22,6 +23,8 @@ words:
   - hotfix
   - readwrite
   - readonly
+  - organised
+  - summarise
   # Python tooling
   - ruff
   - mypy
