@@ -52,6 +52,7 @@ def _make_mock_part() -> MagicMock:
     p.IPN = "R-10K"
     p.revision = "A"
     p.units = "pcs"
+    p.total_stock = 500
     tag = MagicMock()
     tag.name = "smd"
     p.tags.all.return_value = [tag]
@@ -106,6 +107,16 @@ class TestListPartsFields:
         result = await list_parts(fields=["name"])
         assert "tags" not in result[0]
         qs.prefetch_related.assert_not_called()
+
+    async def test_total_stock_included(self, mock_part_class: MagicMock) -> None:
+        part = _make_mock_part()
+        mock_part_class.objects.all.return_value.order_by.return_value.__getitem__ = MagicMock(return_value=[part])
+
+        from inventree_mcp_plugin.tools.simple.parts import list_parts
+
+        result = await list_parts(fields=["name", "total_stock"])
+        assert set(result[0].keys()) == {"id", "name", "total_stock"}
+        assert result[0]["total_stock"] == 500.0
 
     async def test_tags_included_triggers_prefetch(self, mock_part_class: MagicMock) -> None:
         part = _make_mock_part()

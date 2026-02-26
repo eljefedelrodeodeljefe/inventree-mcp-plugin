@@ -41,12 +41,12 @@ def list_parts(
         limit: Maximum number of results to return.
         offset: Number of results to skip.
         fields: Fields to include in each result. Available: id, name, description,
-                category, active, IPN, revision, units, tags. Defaults to all.
+                category, active, IPN, revision, units, total_stock, tags. Defaults to all.
                 ``id`` is always included.
     """
     from part.models import Part
 
-    want = set(fields) if fields is not None else set(_PART_COLS) | {"id", "tags"}
+    want = set(fields) if fields is not None else set(_PART_COLS) | {"id", "total_stock", "tags"}
 
     queryset = Part.objects.all()
     if category_id is not None:
@@ -83,6 +83,8 @@ def list_parts(
             row["revision"] = p.revision or ""
         if "units" in want:
             row["units"] = p.units or ""
+        if "total_stock" in want:
+            row["total_stock"] = float(p.total_stock)
         if want_tags:
             row["tags"] = [t.name for t in p.tags.all()]
         results.append(row)

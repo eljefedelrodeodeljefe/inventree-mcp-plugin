@@ -15,6 +15,7 @@ def _make_mock_part(pk: int = 1, name: str = "Resistor 10k", tag_names: list[str
     mock_part.IPN = "R-10K"
     mock_part.revision = "A"
     mock_part.units = "pcs"
+    mock_part.total_stock = 500
     mock_tags = []
     for t in tag_names or []:
         tag_mock = MagicMock()
@@ -36,6 +37,7 @@ class TestListParts:
         assert len(result) == 1
         assert result[0]["id"] == 1
         assert result[0]["name"] == "Resistor 10k"
+        assert result[0]["total_stock"] == 500.0
         assert result[0]["tags"] == ["smd", "resistor"]
 
     async def test_list_parts_with_category_filter(self, mock_part_class: MagicMock) -> None:
