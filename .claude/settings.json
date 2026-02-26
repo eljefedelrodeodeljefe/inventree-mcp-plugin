@@ -1,0 +1,10 @@
+{
+  "model": "claude-opus-4-6",
+  "enabledPlugins": {
+  },
+  "includeCoAuthoredBy": false,
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  }
+}

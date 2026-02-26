@@ -1,0 +1,68 @@
+version: "0.2"
+language: en
+
+words:
+  # Project name and ecosystem
+  - inventree
+  - InvenTree
+  - Inven
+  - prek
+  - hatchling
+  # MCP / transport layer
+  - fastmcp
+  - FastMCP
+  - jsonrpc
+  - asgi
+  - streamable
+  # InvenTree-specific
+  - bom
+  - pathstring
+  - allaccess
+  - nolimits
+  - hotfix
+  - readwrite
+  - readonly
+  # Python tooling
+  - ruff
+  - mypy
+  - pytest
+  - autouse
+  - conftest
+  - monkeypatch
+  - testpaths
+  - pyproject
+  # Python / general
+  - docstrings
+  - pycache
+  - htmlcov
+  # Django / plugin internals
+  - urlsmixin
+  - settingsmixin
+  - mixins
+  # Docker / infrastructure
+  - celery
+  - redis
+  - postgresql
+  - pgdata
+  - pgdb
+  - pguser
+  - pgpassword
+  - PGDATA
+  - healthcheck
+  - isready
+  - NOINSTALL
+  # Tool categories
+  - combinatory
+  # Workflow
+  - gitflow
+  - monorepo
+  - backcompat
+  # Virtual env
+  - venv
+  # Misc identifiers
+  - eljefedelrodeodeljefe
+
+ignorePaths:
+  - .venv/
+  - "**/*.lock"
+  - CHANGELOG.md

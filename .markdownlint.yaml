@@ -1,0 +1,14 @@
+default: true
+
+# Line length: not enforced in prose/docs
+MD013: false
+
+# Allow duplicate headings in different sections (e.g. "Prerequisites" under multiple h2s)
+MD024:
+  siblings_only: true
+
+# Table separator style: not enforced (compact style used throughout)
+MD060: false
+
+# Allow inline HTML
+MD033: false
