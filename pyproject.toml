@@ -1,6 +1,6 @@
 [project]
 name = "inventree-mcp-plugin"
-version = "0.1.0"
+version = "1.0.0"
 description = "MCP (Model Context Protocol) server plugin for InvenTree"
 readme = "README.md"
 license = "MIT"
