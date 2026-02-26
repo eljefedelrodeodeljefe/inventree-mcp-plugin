@@ -19,3 +19,13 @@ repos:
     rev: v9.6.0
     hooks:
       - id: cspell
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+        args: [inventree_mcp_plugin]

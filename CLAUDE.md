@@ -14,6 +14,7 @@ prek install          # install git hooks
 # Lint
 uv run ruff check .
 uv run ruff format --check .
+uv run mypy inventree_mcp_plugin
 
 # Unit tests (no InvenTree required — all deps are mocked)
 uv run pytest -v

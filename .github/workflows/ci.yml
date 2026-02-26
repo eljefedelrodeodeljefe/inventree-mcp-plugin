@@ -27,6 +27,9 @@ jobs:
       - name: Ruff format check
         run: uv run ruff format --check .
 
+      - name: Mypy
+        run: uv run mypy inventree_mcp_plugin
+
   pre-commit:
     runs-on: ubuntu-latest
     steps:

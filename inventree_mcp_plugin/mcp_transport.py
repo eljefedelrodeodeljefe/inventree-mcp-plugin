@@ -16,6 +16,8 @@ from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from .mcp_server import mcp
 
 if TYPE_CHECKING:
+    from collections.abc import MutableMapping
+
     from starlette.types import Scope
 
 logger = logging.getLogger("inventree_mcp_plugin")
@@ -96,7 +98,7 @@ async def _handle_mcp_request(request: HttpRequest) -> HttpResponse:
     response_started: dict[str, Any] = {}
     response_body = bytearray()
 
-    async def send(message: dict[str, Any]) -> None:
+    async def send(message: MutableMapping[str, Any]) -> None:
         if message["type"] == "http.response.start":
             response_started["status"] = message["status"]
             response_started["headers"] = message.get("headers", [])
@@ -116,7 +118,7 @@ async def _handle_mcp_request(request: HttpRequest) -> HttpResponse:
     return response
 
 
-class MCPView(View):
+class MCPView(View):  # type: ignore[misc]
     """Django view that handles MCP Streamable HTTP transport requests.
 
     Enforces authentication when the plugin's REQUIRE_AUTH setting is enabled.
