@@ -1,6 +1,5 @@
 from collections.abc import Iterator
 from datetime import date
-from decimal import Decimal
 from typing import Any, Generic, TypeVar
 
 _T = TypeVar("_T")
@@ -24,39 +23,17 @@ class _Manager(Generic[_T]):
     def get(self, **kwargs: Any) -> _T: ...
     def order_by(self, *fields: str) -> _QuerySet[_T]: ...
 
-class _LineItem:
+class Build:
     pk: int
+    reference: str
+    part_id: int
     part: Any
     quantity: float
-    reference: str
-
-class PurchaseOrderLineItem(_LineItem):
-    received: float
-
-class SalesOrderLineItem(_LineItem):
-    shipped: float
-
-class PurchaseOrder:
-    pk: int
-    reference: str
-    supplier_id: int
-    supplier: Any
     status: int
-    description: str
     creation_date: date | None
     target_date: date | None
-    total_price: Decimal | None
-    lines: _Manager[PurchaseOrderLineItem]
-    objects: _Manager[PurchaseOrder]
-
-class SalesOrder:
-    pk: int
-    reference: str
-    customer_id: int
-    customer: Any
-    status: int
-    description: str
-    creation_date: date | None
-    target_date: date | None
-    lines: _Manager[SalesOrderLineItem]
-    objects: _Manager[SalesOrder]
+    completed: int
+    completion_date: date | None
+    notes: str
+    destination_id: int | None
+    objects: _Manager[Build]
