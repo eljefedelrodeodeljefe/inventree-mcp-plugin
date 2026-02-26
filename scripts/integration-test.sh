@@ -190,15 +190,18 @@ _smoke_pass() { echo "PASS"; }
 _smoke_fail() { echo "FAIL"; echo "  Response: $1"; }
 
 # Assert a JSON-RPC tool call response has isError:false and the content is a list.
+# FastMCP encodes each list item as a separate content block; the canonical
+# list is in structuredContent.result (MCP 2025-03-26+).
 _assert_tool_list() {
     python3 -c "
 import sys, json
 d = json.load(sys.stdin)
 assert 'result' in d, 'no result key'
 assert not d['result']['isError'], 'isError is true: ' + str(d['result'])
-content = json.loads(d['result']['content'][0]['text'])
-assert isinstance(content, list), 'content is not a list: ' + type(content).__name__
-print(len(content))
+sc = d['result'].get('structuredContent', {})
+items = sc['result'] if 'result' in sc else d['result']['content']
+assert isinstance(items, list), 'items is not a list: ' + type(items).__name__
+print(len(items))
 " 2>/dev/null
 }
 
