@@ -68,6 +68,7 @@ words:
   - venv
   # Misc identifiers
   - eljefedelrodeodeljefe
+  - MishaKav
 
 ignorePaths:
   - .venv/
