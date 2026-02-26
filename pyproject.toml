@@ -26,6 +26,8 @@ line-length = 120
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "TCH", "RUF"]
 ignore = [
     "RUF029",  # async functions required by ASGI interface even without await
+    "RUF067",  # __init__ modules intentionally define helpers (django_orm, _project)
+    "RUF069",  # float equality is fine for exact mock return values in tests
 ]
 
 [tool.ruff.format]
