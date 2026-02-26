@@ -78,6 +78,8 @@ def _stub_inventree_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         "order.models",
         "build",
         "build.models",
+        "taggit",
+        "taggit.models",
     ]:
         add_stub(mod_name)
 
@@ -90,9 +92,18 @@ def _stub_inventree_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     stubs["order.models"].PurchaseOrder = MagicMock()  # type: ignore[attr-defined]
     stubs["order.models"].SalesOrder = MagicMock()  # type: ignore[attr-defined]
     stubs["build.models"].Build = MagicMock()  # type: ignore[attr-defined]
+    stubs["taggit.models"].Tag = MagicMock()  # type: ignore[attr-defined]
 
     for mod_name, mod in stubs.items():
         monkeypatch.setitem(sys.modules, mod_name, mod)
+
+
+@pytest.fixture()
+def mock_tag_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Provide a mock Tag model class."""
+    mock_cls = MagicMock()
+    monkeypatch.setattr("taggit.models.Tag", mock_cls)
+    return mock_cls
 
 
 @pytest.fixture()

@@ -17,3 +17,4 @@ from .tools.simple import locations as _locations  # noqa: E402, F401
 from .tools.simple import orders as _orders  # noqa: E402, F401
 from .tools.simple import parts as _parts  # noqa: E402, F401
 from .tools.simple import stock as _stock  # noqa: E402, F401
+from .tools.simple import tags as _tags  # noqa: E402, F401

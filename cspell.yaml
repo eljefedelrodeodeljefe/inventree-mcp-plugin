@@ -36,6 +36,7 @@ words:
   - pycache
   - htmlcov
   # Django / plugin internals
+  - taggit
   - urlsmixin
   - settingsmixin
   - mixins
