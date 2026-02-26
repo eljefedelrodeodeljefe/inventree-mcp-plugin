@@ -65,4 +65,5 @@ words:
 ignorePaths:
   - .venv/
   - "**/*.lock"
+  - "stubs/**"
   - CHANGELOG.md

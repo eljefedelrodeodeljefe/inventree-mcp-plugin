@@ -1,0 +1,6 @@
+{
+  "python.analysis.extraPaths": ["stubs"],
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingModuleSource": "none"
+  }
+}

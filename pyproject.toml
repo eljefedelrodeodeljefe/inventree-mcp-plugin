@@ -43,6 +43,7 @@ testpaths = ["tests"]
 
 [dependency-groups]
 dev = [
+    "django-types>=0.23.0",
     "mypy>=1.0",
     "pytest>=9.0.2",
     "ruff>=0.15.2",

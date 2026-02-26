@@ -118,7 +118,7 @@ async def _handle_mcp_request(request: HttpRequest) -> HttpResponse:
     return response
 
 
-class MCPView(View):  # type: ignore[misc]
+class MCPView(View):
     """Django view that handles MCP Streamable HTTP transport requests.
 
     Enforces authentication when the plugin's REQUIRE_AUTH setting is enabled.
