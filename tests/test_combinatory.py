@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 
 def _make_part(pk: int, name: str, active: bool = True, locked: bool = False) -> MagicMock:
     part = MagicMock()
@@ -121,3 +123,91 @@ class TestDeleteParts:
         assert result["deleted"] == [1]
         assert result["skipped_count"] == 1
         assert result["skipped"][0]["id"] == 2
+
+
+class TestStockByCategoryAndLocation:
+    @pytest.fixture()
+    def stock_mocks(
+        self,
+        mock_stock_item_class: MagicMock,
+        mock_part_category_class: MagicMock,
+        mock_stock_location_class: MagicMock,
+    ) -> tuple[MagicMock, MagicMock, MagicMock]:
+        return mock_stock_item_class, mock_part_category_class, mock_stock_location_class
+
+    def _setup_stock_query(
+        self,
+        mock_stock_item_class: MagicMock,
+        rows: list[dict[str, object]],
+        *,
+        with_filter: bool = False,
+    ) -> None:
+        qs = mock_stock_item_class.objects.all.return_value
+        if with_filter:
+            qs = qs.filter.return_value
+        qs.values.return_value.annotate.return_value.order_by.return_value = rows
+
+    async def test_aggregates_by_category_and_location(self, stock_mocks: tuple[MagicMock, ...]) -> None:
+        mock_si, mock_cat, mock_loc = stock_mocks
+        self._setup_stock_query(
+            mock_si,
+            [
+                {"part__category": 1, "location": 10, "total_quantity": 100},
+                {"part__category": 2, "location": 20, "total_quantity": 50},
+            ],
+        )
+        mock_cat.objects.filter.return_value.values_list.return_value = [(1, "Electronics"), (2, "Mechanical")]
+        mock_loc.objects.filter.return_value.values_list.return_value = [(10, "Warehouse A"), (20, "Warehouse B")]
+
+        from inventree_mcp_plugin.tools.combinatory.stock import stock_by_category_and_location
+
+        result = await stock_by_category_and_location()
+        assert len(result) == 2
+        assert result[0] == {
+            "category_id": 1,
+            "category_name": "Electronics",
+            "location_id": 10,
+            "location_name": "Warehouse A",
+            "total_quantity": 100.0,
+        }
+        assert result[1] == {
+            "category_id": 2,
+            "category_name": "Mechanical",
+            "location_id": 20,
+            "location_name": "Warehouse B",
+            "total_quantity": 50.0,
+        }
+
+    async def test_null_location_shown_as_unassigned(self, stock_mocks: tuple[MagicMock, ...]) -> None:
+        mock_si, mock_cat, mock_loc = stock_mocks
+        self._setup_stock_query(
+            mock_si,
+            [{"part__category": 1, "location": None, "total_quantity": 25}],
+        )
+        mock_cat.objects.filter.return_value.values_list.return_value = [(1, "Electronics")]
+        mock_loc.objects.filter.return_value.values_list.return_value = []
+
+        from inventree_mcp_plugin.tools.combinatory.stock import stock_by_category_and_location
+
+        result = await stock_by_category_and_location()
+        assert len(result) == 1
+        assert result[0]["location_id"] is None
+        assert result[0]["location_name"] == "Unassigned"
+
+    async def test_category_filter(self, stock_mocks: tuple[MagicMock, ...]) -> None:
+        mock_si, mock_cat, mock_loc = stock_mocks
+        self._setup_stock_query(
+            mock_si,
+            [{"part__category": 5, "location": 10, "total_quantity": 75}],
+            with_filter=True,
+        )
+        mock_cat.objects.filter.return_value.values_list.return_value = [(5, "Sensors")]
+        mock_loc.objects.filter.return_value.values_list.return_value = [(10, "Shelf 1")]
+
+        from inventree_mcp_plugin.tools.combinatory.stock import stock_by_category_and_location
+
+        result = await stock_by_category_and_location(category_id=5)
+        mock_si.objects.all.return_value.filter.assert_called_with(part__category=5)
+        assert len(result) == 1
+        assert result[0]["category_id"] == 5
+        assert result[0]["category_name"] == "Sensors"
