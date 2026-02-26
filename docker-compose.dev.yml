@@ -42,6 +42,9 @@ services:
   inventree-server:
     image: inventree/inventree:${INVENTREE_TAG:-stable}
     container_name: inventree-test-server
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
       - "${INVENTREE_PORT:-8000}:8000"
     depends_on:
@@ -85,6 +88,9 @@ services:
     image: inventree/inventree:${INVENTREE_TAG:-stable}
     container_name: inventree-test-worker
     command: invoke worker
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     depends_on:
       - inventree-server
     environment:
