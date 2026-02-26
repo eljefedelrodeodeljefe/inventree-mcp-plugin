@@ -1,5 +1,11 @@
 """FastMCP server instance and tool registration."""
 
+# Prevent InvenTree's plugin scanner from adding the FastMCP instance to its
+# module-attribute context (which causes inspect.getmembers to crash on the
+# session_manager property).  Explicit imports (from .mcp_server import mcp)
+# are unaffected by __all__.
+__all__: list[str] = []
+
 from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP(

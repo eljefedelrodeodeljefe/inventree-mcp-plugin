@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+# Prevent InvenTree's plugin scanner from picking up the `mcp` FastMCP instance.
+__all__: list[str] = []
+
 from typing import Any
 
 from typing_extensions import TypedDict

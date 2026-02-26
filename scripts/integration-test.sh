@@ -11,6 +11,7 @@
 #   ./scripts/integration-test.sh smoke          # Run authenticated smoke tests
 #   ./scripts/integration-test.sh status         # Check if the server is healthy
 #   ./scripts/integration-test.sh down           # Tear down stack and delete all volumes
+#   ./scripts/integration-test.sh mcp-config     # Write .mcp.json with a fresh token
 #
 set -euo pipefail
 
@@ -104,6 +105,34 @@ _setup_mcp_users() {
     echo "        The API does not currently support setting rule sets directly."
 }
 
+_install_plugin() {
+    # Install the mcp package into the running containers, activate the plugin,
+    # then restart so InvenTree registers the plugin URLs.
+    echo "Installing mcp package in containers..."
+    $COMPOSE exec -T inventree-server pip install 'mcp>=1.9' --quiet
+    # Worker may still be starting up; installation is best-effort
+    $COMPOSE exec -T inventree-worker pip install 'mcp>=1.9' --quiet 2>/dev/null || true
+
+    echo "Activating MCP plugin and enabling plugin URLs in InvenTree database..."
+    $COMPOSE exec -T inventree-server sh -c "
+cd /home/inventree/src/backend/InvenTree
+python manage.py shell -c \"
+from plugin.models import PluginConfig
+from common.models import InvenTreeSetting
+cfg, created = PluginConfig.objects.get_or_create(key='inventree-mcp', defaults={'name': 'InvenTreeMCPPlugin', 'active': True})
+if not cfg.active:
+    cfg.active = True
+    cfg.save()
+print('  Plugin active:', cfg.key)
+InvenTreeSetting.set_setting('ENABLE_PLUGINS_URL', True, None)
+print('  ENABLE_PLUGINS_URL: True')
+\"" 2>/dev/null || echo "  WARNING: could not activate plugin via shell (will retry after restart)"
+
+    echo "Restarting services to register plugin URLs..."
+    $COMPOSE restart inventree-server inventree-worker
+    _wait_healthy
+}
+
 cmd_up() {
     echo "Starting InvenTree integration test stack..."
     $COMPOSE up -d
@@ -111,6 +140,7 @@ cmd_up() {
     echo "Seeding demo data (this will take a moment)..."
     $COMPOSE run --rm inventree-server invoke dev.setup-test -i
     echo ""
+    _install_plugin
 
     _setup_mcp_users
     echo ""
@@ -123,7 +153,8 @@ cmd_up() {
     echo ""
     echo "MCP endpoint: ${MCP_URL}"
     echo ""
-    echo "Get a token:  ./scripts/integration-test.sh token"
+    _write_mcp_config
+    echo ""
     echo "Smoke test:   ./scripts/integration-test.sh smoke"
 }
 
@@ -131,7 +162,9 @@ cmd_reset() {
     echo "Resetting InvenTree data..."
     $COMPOSE run --rm inventree-server invoke dev.delete-data
     $COMPOSE run --rm inventree-server invoke dev.setup-test -i
+    _install_plugin
     _setup_mcp_users
+    _write_mcp_config
     echo "Data reset complete."
 }
 
@@ -262,6 +295,35 @@ cmd_status() {
     fi
 }
 
+_write_mcp_config() {
+    local token
+    token=$(_get_token)
+    local mcp_json
+    mcp_json=$(cat <<EOF
+{
+  "mcpServers": {
+    "inventree": {
+      "type": "http",
+      "url": "${SERVER_URL}/plugin/inventree-mcp/mcp/",
+      "headers": {
+        "Authorization": "Token ${token}"
+      }
+    }
+  }
+}
+EOF
+)
+    local config_file
+    config_file="$(dirname "$(dirname "$0")")/.mcp.json"
+    echo "$mcp_json" > "$config_file"
+    echo "Wrote ${config_file} (token: ${token:0:12}...)"
+    echo "Reconnect the MCP server in Claude Code to pick up the new token."
+}
+
+cmd_mcp_config() {
+    _write_mcp_config
+}
+
 cmd_down() {
     echo "Tearing down stack and removing volumes..."
     $COMPOSE down -v --remove-orphans
@@ -269,14 +331,15 @@ cmd_down() {
 }
 
 case "${1:-help}" in
-    up)     cmd_up ;;
-    reset)  cmd_reset ;;
-    token)  cmd_token "$@" ;;
-    smoke)  cmd_smoke ;;
-    status) cmd_status ;;
-    down)   cmd_down ;;
+    up)         cmd_up ;;
+    reset)      cmd_reset ;;
+    token)      cmd_token "$@" ;;
+    smoke)      cmd_smoke ;;
+    status)     cmd_status ;;
+    down)       cmd_down ;;
+    mcp-config) cmd_mcp_config ;;
     *)
-        echo "Usage: $0 {up|reset|token|smoke|status|down}"
+        echo "Usage: $0 {up|reset|token|smoke|status|down|mcp-config}"
         echo ""
         echo "  up               Start the stack, seed demo data, create MCP users"
         echo "  reset            Wipe all data, re-seed, re-create MCP users"
@@ -284,6 +347,7 @@ case "${1:-help}" in
         echo "  smoke            Run authenticated smoke tests against the MCP endpoint"
         echo "  status           Check if InvenTree is healthy"
         echo "  down             Tear down the stack and delete all volumes"
+        echo "  mcp-config       Write .mcp.json with a fresh token for Claude Code"
         exit 1
         ;;
 esac

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+# Prevent InvenTree's plugin scanner from picking up the `mcp` FastMCP instance.
+__all__: list[str] = []
+
 import asyncio
 import contextlib
 import logging
@@ -9,8 +12,9 @@ from typing import TYPE_CHECKING, Any
 
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.urls import path
+from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt  # applied at class level via method_decorator
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 
 from .mcp_server import mcp
@@ -22,19 +26,18 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("inventree_mcp_plugin")
 
-_session_manager: StreamableHTTPSessionManager | None = None
 
+def _new_session_manager() -> StreamableHTTPSessionManager:
+    """Create a fresh StreamableHTTPSessionManager for a single request.
 
-def _get_session_manager() -> StreamableHTTPSessionManager:
-    """Get or create the singleton StreamableHTTPSessionManager."""
-    global _session_manager
-    if _session_manager is None:
-        _session_manager = StreamableHTTPSessionManager(
-            app=mcp._mcp_server,
-            json_response=True,
-            stateless=True,
-        )
-    return _session_manager
+    StreamableHTTPSessionManager.run() can only be called once per instance,
+    so a new instance must be created for every incoming request.
+    """
+    return StreamableHTTPSessionManager(
+        app=mcp._mcp_server,
+        json_response=True,
+        stateless=True,
+    )
 
 
 def _check_auth(request: HttpRequest) -> bool:
@@ -83,7 +86,7 @@ def _build_asgi_scope(request: HttpRequest) -> Scope:
 
 async def _handle_mcp_request(request: HttpRequest) -> HttpResponse:
     """Dispatch a Django request to the MCP session manager via ASGI."""
-    session_manager = _get_session_manager()
+    session_manager = _new_session_manager()
     body = request.body
 
     scope = _build_asgi_scope(request)
@@ -118,6 +121,7 @@ async def _handle_mcp_request(request: HttpRequest) -> HttpResponse:
     return response
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class MCPView(View):
     """Django view that handles MCP Streamable HTTP transport requests.
 

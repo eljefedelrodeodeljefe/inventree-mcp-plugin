@@ -83,6 +83,9 @@ services:
     volumes:
       - inventree-test-data:/home/inventree/data
       - ./:/home/inventree/data/plugins/inventree-mcp-plugin:ro
+      # Expose the Python package directly on sys.path (INVENTREE_PLUGIN_DIR is on sys.path,
+      # but the package lives one level deeper inside the repo mount above).
+      - ./inventree_mcp_plugin:/home/inventree/data/plugins/inventree_mcp_plugin:ro
 
   inventree-worker:
     image: inventree/inventree:${INVENTREE_TAG:-stable}
@@ -111,6 +114,7 @@ services:
     volumes:
       - inventree-test-data:/home/inventree/data
       - ./:/home/inventree/data/plugins/inventree-mcp-plugin:ro
+      - ./inventree_mcp_plugin:/home/inventree/data/plugins/inventree_mcp_plugin:ro
 
 volumes:
   inventree-test-data:
