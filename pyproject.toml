@@ -41,6 +41,7 @@ ignore_missing_imports = true  # Django/InvenTree provided by host, no stubs in 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+addopts = "--cov-report=term --cov-report=html --cov-report=lcov"
 
 [dependency-groups]
 dev = [
@@ -60,6 +61,9 @@ source = ["inventree_mcp_plugin"]
 [tool.coverage.report]
 show_missing = true
 skip_empty = true
+
+[tool.coverage.html]
+directory = "htmlcov"
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]

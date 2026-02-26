@@ -35,6 +35,7 @@ words:
   - conftest
   - monkeypatch
   - testpaths
+  - addopts
   - pyproject
   # Python / general
   - isinstance

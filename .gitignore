@@ -26,6 +26,7 @@ env/
 .pytest_cache/
 .coverage
 htmlcov/
+coverage.lcov
 .mypy_cache/
 .ruff_cache/
 
@@ -35,5 +36,6 @@ uv.lock
 # OS
 .DS_Store
 Thumbs.db
+social-preview.png
 
 .mcp.json
