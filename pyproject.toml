@@ -69,6 +69,7 @@ directory = "htmlcov"
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
+version_variables = ["inventree_mcp_plugin/__init__.py:PLUGIN_VERSION"]
 branch = "main"
 commit_message = "chore(release): {version}"
 build_command = ""
