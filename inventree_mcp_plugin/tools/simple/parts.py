@@ -185,7 +185,8 @@ def search_parts(
     orm_cols = {"pk"} | {search_cols[f] for f in want if f in search_cols}
 
     parts = (
-        Part.objects.filter(Q(name__icontains=query) | Q(description__icontains=query))
+        Part.objects
+        .filter(Q(name__icontains=query) | Q(description__icontains=query))
         .only(*orm_cols)
         .order_by("name")[:limit]
     )

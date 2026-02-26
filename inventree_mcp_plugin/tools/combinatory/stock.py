@@ -42,7 +42,8 @@ def stock_by_category_and_location(
         queryset = queryset.filter(part__category=category_id)
 
     rows = list(
-        queryset.values("part__category", "location")
+        queryset
+        .values("part__category", "location")
         .annotate(total_quantity=Sum("quantity"))
         .order_by("part__category", "location")
     )
