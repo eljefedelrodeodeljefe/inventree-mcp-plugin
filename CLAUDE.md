@@ -100,7 +100,7 @@ Four jobs in `.github/workflows/ci.yml`:
 |-----|-------------|
 | `lint` | `ruff check` + `ruff format --check` + `mypy` |
 | `pre-commit` | `prek run --all-files` via `j178/prek-action@v1` |
-| `test` | `pytest -v` |
+| `test` | `pytest -v` with coverage reporting; posts a coverage summary comment on PRs |
 | `smoke` | Spins up the Docker integration stack and runs `integration-test.sh smoke` |
 
 ## Releases

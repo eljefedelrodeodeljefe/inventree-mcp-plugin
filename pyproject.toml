@@ -50,8 +50,16 @@ dev = [
     "pytest-asyncio>=0.24",
     "python-semantic-release>=9.0",
     "pytest>=9.0.2",
+    "pytest-cov>=6.0",
     "ruff>=0.15.2",
 ]
+
+[tool.coverage.run]
+source = ["inventree_mcp_plugin"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
