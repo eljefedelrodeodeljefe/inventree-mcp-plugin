@@ -142,6 +142,7 @@ curl -s http://your-inventree-instance/api/user/token/ \
 |------|-------------------|--------------------|
 | `delete_parts` | Part | delete |
 | `stock_by_category_and_location` | Stock Item, Part Category, Stock Location | view |
+| `stock_pivot` | Stock Item, Part Category, Stock Location | view |
 
 ## Usage with MCP Clients
 
@@ -342,6 +343,7 @@ Common prompts to use once the MCP is connected to your AI assistant. Paste them
 |------|-------------|
 | `delete_parts` | Delete multiple parts by ID (with safety checks) |
 | `stock_by_category_and_location` | Stock quantity pivot by category and location |
+| `stock_pivot` | Stock quantity pivot with full category/location hierarchy paths |
 
 ## Development
 

@@ -26,6 +26,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("inventree_mcp_plugin")
 
+_REQUEST_TIMEOUT_SECONDS: float = 60.0
+
 
 def _new_session_manager() -> StreamableHTTPSessionManager:
     """Create a fresh StreamableHTTPSessionManager for a single request.
@@ -82,6 +84,21 @@ def _build_asgi_scope(request: HttpRequest) -> Scope:
         "client": (request.META.get("REMOTE_ADDR", "127.0.0.1"), 0),
         "server": (request.get_host(), int(request.META.get("SERVER_PORT", 80))),
     }
+
+
+def _cancel_pending_tasks(loop: asyncio.AbstractEventLoop) -> None:
+    """Cancel all pending async tasks on *loop* before it is closed.
+
+    Prevents ``coroutine was never awaited`` warnings and ensures MCP session
+    resources are freed when the sync worker shuts down the event loop.
+    """
+    pending = asyncio.all_tasks(loop)
+    if not pending:
+        return
+    for task in pending:
+        task.cancel()
+    with contextlib.suppress(Exception):
+        loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
 
 
 async def _handle_mcp_request(request: HttpRequest) -> HttpResponse:
@@ -150,10 +167,47 @@ class MCPView(View):
                 status=401,
             )
 
+        logger.debug("MCP request started: %s %s", request.method, request.path)
         loop = asyncio.new_event_loop()
         try:
-            return loop.run_until_complete(_handle_mcp_request(request))
+            response = loop.run_until_complete(
+                asyncio.wait_for(_handle_mcp_request(request), timeout=_REQUEST_TIMEOUT_SECONDS)
+            )
+            logger.debug("MCP request completed: %s %s", request.method, request.path)
+            return response
+        except TimeoutError:
+            logger.warning(
+                "MCP request timed out after %.0fs: %s %s",
+                _REQUEST_TIMEOUT_SECONDS,
+                request.method,
+                request.path,
+            )
+            return JsonResponse(
+                {
+                    "jsonrpc": "2.0",
+                    "error": {
+                        "code": -32000,
+                        "message": f"Request timed out after {_REQUEST_TIMEOUT_SECONDS:.0f}s",
+                    },
+                    "id": None,
+                },
+                status=504,
+            )
+        except Exception:
+            logger.exception("MCP request failed: %s %s", request.method, request.path)
+            return JsonResponse(
+                {
+                    "jsonrpc": "2.0",
+                    "error": {
+                        "code": -32603,
+                        "message": "Internal server error",
+                    },
+                    "id": None,
+                },
+                status=500,
+            )
         finally:
+            _cancel_pending_tasks(loop)
             loop.close()
 
 
