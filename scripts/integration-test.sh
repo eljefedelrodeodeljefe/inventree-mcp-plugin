@@ -252,15 +252,15 @@ cmd_smoke() {
     fi
 
     # --- Test 3: Authenticated tools/list ---
-    echo -n "3. tools/list returns 27 tools... "
+    echo -n "3. tools/list returns 28 tools... "
     resp=$(curl -sf -X POST "${MCP_URL}" -H "$ct" -H "$accept" -H "$auth" \
         -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' 2>&1) || true
-    if echo "$resp" | python3 -c "import sys,json; d=json.load(sys.stdin); assert len(d['result']['tools']) == 27" 2>/dev/null; then
+    if echo "$resp" | python3 -c "import sys,json; d=json.load(sys.stdin); assert len(d['result']['tools']) == 28" 2>/dev/null; then
         _smoke_pass; pass=$((pass + 1))
     else
         local tool_count
         tool_count=$(echo "$resp" | python3 -c "import sys,json; print(len(json.load(sys.stdin).get('result',{}).get('tools',[])))" 2>/dev/null || echo "?")
-        _smoke_fail "got ${tool_count} tools — expected 27"; fail=$((fail + 1))
+        _smoke_fail "got ${tool_count} tools — expected 28"; fail=$((fail + 1))
     fi
 
     # --- Tests 4–12: tools/call for every domain ---
