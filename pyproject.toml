@@ -40,11 +40,14 @@ ignore_missing_imports = true  # Django/InvenTree provided by host, no stubs in 
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "auto"
 
 [dependency-groups]
 dev = [
+    "asgiref>=3.7",
     "django-types>=0.23.0",
     "mypy>=1.0",
+    "pytest-asyncio>=0.24",
     "python-semantic-release>=9.0",
     "pytest>=9.0.2",
     "ruff>=0.15.2",

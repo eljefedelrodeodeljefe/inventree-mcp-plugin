@@ -10,6 +10,7 @@ from typing import NotRequired
 from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+from ...tools import django_orm
 
 
 class SkippedPart(TypedDict):
@@ -26,6 +27,7 @@ class DeletePartsResult(TypedDict):
 
 
 @mcp.tool()
+@django_orm
 def delete_parts(
     part_ids: list[int],
     delete_from_assemblies: bool = False,

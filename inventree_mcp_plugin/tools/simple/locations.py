@@ -10,6 +10,7 @@ from typing import Any
 from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+from ...tools import django_orm
 
 
 class LocationSummary(TypedDict):
@@ -38,6 +39,7 @@ class LocationNode(TypedDict):
 
 
 @mcp.tool()
+@django_orm
 def list_locations(
     parent_id: int | None = None,
     limit: int = 100,
@@ -70,6 +72,7 @@ def list_locations(
 
 
 @mcp.tool()
+@django_orm
 def get_location(location_id: int) -> LocationDetail:
     """Get detailed information about a stock location.
 
@@ -91,6 +94,7 @@ def get_location(location_id: int) -> LocationDetail:
 
 
 @mcp.tool()
+@django_orm
 def get_location_tree(parent_id: int | None = None, max_depth: int = 3) -> list[LocationNode]:
     """Get a hierarchical tree of stock locations.
 

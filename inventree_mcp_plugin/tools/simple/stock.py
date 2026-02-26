@@ -8,6 +8,7 @@ __all__: list[str] = []
 from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+from ...tools import django_orm
 
 
 class StockItemSummary(TypedDict):
@@ -48,6 +49,7 @@ class StockTransferResult(TypedDict):
 
 
 @mcp.tool()
+@django_orm
 def list_stock_items(
     part_id: int | None = None,
     location_id: int | None = None,
@@ -86,6 +88,7 @@ def list_stock_items(
 
 
 @mcp.tool()
+@django_orm
 def get_stock_item(stock_item_id: int) -> StockItemDetail:
     """Get detailed information about a specific stock item.
 
@@ -105,12 +108,13 @@ def get_stock_item(stock_item_id: int) -> StockItemDetail:
         "serial": item.serial,
         "batch": item.batch,
         "status": item.status,
-        "notes": item.notes,
+        "notes": item.notes or "",
         "updated": str(item.updated) if item.updated else None,
     }
 
 
 @mcp.tool()
+@django_orm
 def adjust_stock(stock_item_id: int, quantity: float, notes: str = "") -> StockAdjustResult:
     """Adjust the quantity of a stock item (add or remove stock).
 
@@ -138,6 +142,7 @@ def adjust_stock(stock_item_id: int, quantity: float, notes: str = "") -> StockA
 
 
 @mcp.tool()
+@django_orm
 def transfer_stock(stock_item_id: int, location_id: int, notes: str = "") -> StockTransferResult:
     """Transfer a stock item to a different location.
 

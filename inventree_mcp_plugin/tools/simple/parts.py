@@ -8,6 +8,7 @@ __all__: list[str] = []
 from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+from ...tools import django_orm
 
 
 class PartSummary(TypedDict):
@@ -63,6 +64,7 @@ class PartUpdateResult(TypedDict):
 
 
 @mcp.tool()
+@django_orm
 def list_parts(
     category_id: int | None = None,
     active: bool | None = None,
@@ -99,9 +101,9 @@ def list_parts(
             "description": p.description,
             "category": p.category_id,
             "active": p.active,
-            "IPN": p.IPN,
-            "revision": p.revision,
-            "units": p.units,
+            "IPN": p.IPN or "",
+            "revision": p.revision or "",
+            "units": p.units or "",
             "tags": [t.name for t in p.tags.all()],
         }
         for p in parts
@@ -109,6 +111,7 @@ def list_parts(
 
 
 @mcp.tool()
+@django_orm
 def get_part(part_id: int) -> PartDetail:
     """Get detailed information about a specific part.
 
@@ -124,9 +127,9 @@ def get_part(part_id: int) -> PartDetail:
         "description": p.description,
         "category": p.category_id,
         "active": p.active,
-        "IPN": p.IPN,
-        "revision": p.revision,
-        "units": p.units,
+        "IPN": p.IPN or "",
+        "revision": p.revision or "",
+        "units": p.units or "",
         "assembly": p.assembly,
         "component": p.component,
         "purchaseable": p.purchaseable,
@@ -139,6 +142,7 @@ def get_part(part_id: int) -> PartDetail:
 
 
 @mcp.tool()
+@django_orm
 def search_parts(query: str, limit: int = 50) -> list[PartSearchResult]:
     """Search parts by name or description.
 
@@ -163,6 +167,7 @@ def search_parts(query: str, limit: int = 50) -> list[PartSearchResult]:
 
 
 @mcp.tool()
+@django_orm
 def create_part(
     name: str,
     description: str,
@@ -217,6 +222,7 @@ def create_part(
 
 
 @mcp.tool()
+@django_orm
 def update_part(part_id: int, **kwargs: bool | str) -> PartUpdateResult:
     """Update an existing part's fields.
 

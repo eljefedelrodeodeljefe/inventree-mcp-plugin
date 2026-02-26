@@ -8,6 +8,7 @@ __all__: list[str] = []
 from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+from ...tools import django_orm
 
 
 class BomItemSummary(TypedDict):
@@ -40,6 +41,7 @@ class BomResult(TypedDict):
 
 
 @mcp.tool()
+@django_orm
 def list_bom_items(
     part_id: int | None = None,
     sub_part_id: int | None = None,
@@ -71,7 +73,7 @@ def list_bom_items(
             "sub_part": item.sub_part_id,
             "sub_part_name": item.sub_part.name,
             "quantity": float(item.quantity),
-            "reference": item.reference,
+            "reference": item.reference or "",
             "optional": item.optional,
         }
         for item in items
@@ -79,6 +81,7 @@ def list_bom_items(
 
 
 @mcp.tool()
+@django_orm
 def get_bom_for_part(part_id: int) -> BomResult:
     """Get the full BOM (Bill of Materials) for a specific part.
 
@@ -98,7 +101,7 @@ def get_bom_for_part(part_id: int) -> BomResult:
                 "sub_part": item.sub_part_id,
                 "sub_part_name": item.sub_part.name,
                 "quantity": float(item.quantity),
-                "reference": item.reference,
+                "reference": item.reference or "",
                 "optional": item.optional,
                 "consumable": item.consumable,
                 "allow_variants": item.allow_variants,

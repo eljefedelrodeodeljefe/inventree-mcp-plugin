@@ -8,6 +8,7 @@ __all__: list[str] = []
 from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+from ...tools import django_orm
 
 
 class TagResult(TypedDict):
@@ -17,6 +18,7 @@ class TagResult(TypedDict):
 
 
 @mcp.tool()
+@django_orm
 def list_tags(
     limit: int = 100,
     offset: int = 0,
@@ -34,6 +36,7 @@ def list_tags(
 
 
 @mcp.tool()
+@django_orm
 def search_tags(query: str, limit: int = 50) -> list[TagResult]:
     """Search tags by name (case-insensitive substring match).
 

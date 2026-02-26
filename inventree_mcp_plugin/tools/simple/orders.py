@@ -8,6 +8,7 @@ __all__: list[str] = []
 from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+from ...tools import django_orm
 
 
 class PurchaseOrderSummary(TypedDict):
@@ -76,6 +77,7 @@ class SalesOrderDetail(TypedDict):
 
 
 @mcp.tool()
+@django_orm
 def list_purchase_orders(
     supplier_id: int | None = None,
     outstanding: bool | None = None,
@@ -106,7 +108,7 @@ def list_purchase_orders(
             "supplier": order.supplier_id,
             "supplier_name": order.supplier.name if order.supplier else None,
             "status": order.status,
-            "description": order.description,
+            "description": order.description or "",
             "creation_date": str(order.creation_date) if order.creation_date else None,
             "target_date": str(order.target_date) if order.target_date else None,
         }
@@ -115,6 +117,7 @@ def list_purchase_orders(
 
 
 @mcp.tool()
+@django_orm
 def get_purchase_order(order_id: int) -> PurchaseOrderDetail:
     """Get detailed information about a purchase order.
 
@@ -131,7 +134,7 @@ def get_purchase_order(order_id: int) -> PurchaseOrderDetail:
             "part_name": line.part.name if line.part else None,
             "quantity": float(line.quantity),
             "received": float(line.received),
-            "reference": line.reference,
+            "reference": line.reference or "",
         }
         for line in order.lines.all()
     ]
@@ -141,7 +144,7 @@ def get_purchase_order(order_id: int) -> PurchaseOrderDetail:
         "supplier": order.supplier_id,
         "supplier_name": order.supplier.name if order.supplier else None,
         "status": order.status,
-        "description": order.description,
+        "description": order.description or "",
         "creation_date": str(order.creation_date) if order.creation_date else None,
         "target_date": str(order.target_date) if order.target_date else None,
         "lines": lines,
@@ -150,6 +153,7 @@ def get_purchase_order(order_id: int) -> PurchaseOrderDetail:
 
 
 @mcp.tool()
+@django_orm
 def list_sales_orders(
     customer_id: int | None = None,
     outstanding: bool | None = None,
@@ -180,7 +184,7 @@ def list_sales_orders(
             "customer": order.customer_id,
             "customer_name": order.customer.name if order.customer else None,
             "status": order.status,
-            "description": order.description,
+            "description": order.description or "",
             "creation_date": str(order.creation_date) if order.creation_date else None,
             "target_date": str(order.target_date) if order.target_date else None,
         }
@@ -189,6 +193,7 @@ def list_sales_orders(
 
 
 @mcp.tool()
+@django_orm
 def get_sales_order(order_id: int) -> SalesOrderDetail:
     """Get detailed information about a sales order.
 
@@ -205,7 +210,7 @@ def get_sales_order(order_id: int) -> SalesOrderDetail:
             "part_name": line.part.name if line.part else None,
             "quantity": float(line.quantity),
             "shipped": float(line.shipped),
-            "reference": line.reference,
+            "reference": line.reference or "",
         }
         for line in order.lines.all()
     ]
@@ -215,7 +220,7 @@ def get_sales_order(order_id: int) -> SalesOrderDetail:
         "customer": order.customer_id,
         "customer_name": order.customer.name if order.customer else None,
         "status": order.status,
-        "description": order.description,
+        "description": order.description or "",
         "creation_date": str(order.creation_date) if order.creation_date else None,
         "target_date": str(order.target_date) if order.target_date else None,
         "lines": lines,

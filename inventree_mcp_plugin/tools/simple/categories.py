@@ -10,6 +10,7 @@ from typing import Any
 from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+from ...tools import django_orm
 
 
 class CategorySummary(TypedDict):
@@ -38,6 +39,7 @@ class CategoryNode(TypedDict):
 
 
 @mcp.tool()
+@django_orm
 def list_categories(
     parent_id: int | None = None,
     limit: int = 100,
@@ -70,6 +72,7 @@ def list_categories(
 
 
 @mcp.tool()
+@django_orm
 def get_category(category_id: int) -> CategoryDetail:
     """Get detailed information about a part category.
 
@@ -91,6 +94,7 @@ def get_category(category_id: int) -> CategoryDetail:
 
 
 @mcp.tool()
+@django_orm
 def get_category_tree(parent_id: int | None = None, max_depth: int = 3) -> list[CategoryNode]:
     """Get a hierarchical tree of part categories.
 

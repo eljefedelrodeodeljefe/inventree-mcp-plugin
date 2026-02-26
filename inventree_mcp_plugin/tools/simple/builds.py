@@ -8,6 +8,7 @@ __all__: list[str] = []
 from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+from ...tools import django_orm
 
 
 class BuildSummary(TypedDict):
@@ -38,6 +39,7 @@ class BuildDetail(TypedDict):
 
 
 @mcp.tool()
+@django_orm
 def list_build_orders(
     part_id: int | None = None,
     active: bool | None = None,
@@ -78,6 +80,7 @@ def list_build_orders(
 
 
 @mcp.tool()
+@django_orm
 def get_build_order(build_id: int) -> BuildDetail:
     """Get detailed information about a build order.
 
@@ -98,6 +101,6 @@ def get_build_order(build_id: int) -> BuildDetail:
         "creation_date": str(b.creation_date) if b.creation_date else None,
         "target_date": str(b.target_date) if b.target_date else None,
         "completion_date": str(b.completion_date) if b.completion_date else None,
-        "notes": b.notes,
+        "notes": b.notes or "",
         "destination": b.destination_id,
     }

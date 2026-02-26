@@ -26,6 +26,8 @@ words:
   - organised
   - summarise
   # Python tooling
+  - asgiref
+  - asyncio
   - ruff
   - mypy
   - pytest
