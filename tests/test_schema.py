@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-# All 26 tools: name -> set of required parameter names (non-defaulted).
+# All 27 tools: name -> set of required parameter names (non-defaulted).
 _EXPECTED_TOOLS: dict[str, set[str]] = {
     # Parts
     "list_parts": set(),
@@ -46,6 +46,7 @@ _EXPECTED_TOOLS: dict[str, set[str]] = {
     "search_tags": {"query"},
     # Combinatory
     "delete_parts": {"part_ids"},
+    "stock_by_category_and_location": set(),
 }
 
 

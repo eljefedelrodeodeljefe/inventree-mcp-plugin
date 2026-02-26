@@ -67,6 +67,7 @@ def _stub_inventree_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     # Django ORM model stubs
     django_q = MagicMock()
     stubs["django.db.models"].Q = django_q  # type: ignore[attr-defined]
+    stubs["django.db.models"].Sum = MagicMock()  # type: ignore[attr-defined]
 
     # InvenTree model stubs
     for mod_name in [
@@ -98,10 +99,43 @@ def _stub_inventree_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setitem(sys.modules, mod_name, mod)
 
 
+def _make_fluent_qs(mock_cls: MagicMock) -> MagicMock:
+    """Return a queryset mock where all ORM chaining methods return the same object.
+
+    This lets tests set up ``qs.order_by.return_value.__getitem__`` once and have
+    the result survive any combination of ``.only()``, ``.select_related()``, etc.
+    ``qs.get`` is aliased to ``mock_cls.objects.get`` so that tests can configure
+    the return value on either path.
+    """
+    qs = mock_cls.objects.all.return_value
+    for method in (
+        "filter",
+        "exclude",
+        "only",
+        "defer",
+        "select_related",
+        "prefetch_related",
+        "distinct",
+        "order_by",
+        "values",
+        "annotate",
+        "values_list",
+    ):
+        getattr(qs, method).return_value = qs
+    # Direct objects.* entry-points (tools that skip .all())
+    mock_cls.objects.only.return_value = qs
+    mock_cls.objects.filter.return_value = qs
+    mock_cls.objects.order_by.return_value = qs
+    # alias qs.get → objects.get so both code paths use the same mock
+    qs.get = mock_cls.objects.get
+    return qs
+
+
 @pytest.fixture()
 def mock_tag_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     """Provide a mock Tag model class."""
     mock_cls = MagicMock()
+    _make_fluent_qs(mock_cls)
     monkeypatch.setattr("taggit.models.Tag", mock_cls)
     return mock_cls
 
@@ -110,7 +144,17 @@ def mock_tag_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
 def mock_part_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     """Provide a mock Part model class."""
     mock_cls = MagicMock()
+    _make_fluent_qs(mock_cls)
     monkeypatch.setattr("part.models.Part", mock_cls)
+    return mock_cls
+
+
+@pytest.fixture()
+def mock_bom_item_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Provide a mock BomItem model class."""
+    mock_cls = MagicMock()
+    _make_fluent_qs(mock_cls)
+    monkeypatch.setattr("part.models.BomItem", mock_cls)
     return mock_cls
 
 
@@ -118,6 +162,7 @@ def mock_part_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
 def mock_stock_item_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     """Provide a mock StockItem model class."""
     mock_cls = MagicMock()
+    _make_fluent_qs(mock_cls)
     monkeypatch.setattr("stock.models.StockItem", mock_cls)
     return mock_cls
 
@@ -126,6 +171,7 @@ def mock_stock_item_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
 def mock_stock_location_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     """Provide a mock StockLocation model class."""
     mock_cls = MagicMock()
+    _make_fluent_qs(mock_cls)
     monkeypatch.setattr("stock.models.StockLocation", mock_cls)
     return mock_cls
 
@@ -134,5 +180,33 @@ def mock_stock_location_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
 def mock_part_category_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     """Provide a mock PartCategory model class."""
     mock_cls = MagicMock()
+    _make_fluent_qs(mock_cls)
     monkeypatch.setattr("part.models.PartCategory", mock_cls)
+    return mock_cls
+
+
+@pytest.fixture()
+def mock_purchase_order_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Provide a mock PurchaseOrder model class."""
+    mock_cls = MagicMock()
+    _make_fluent_qs(mock_cls)
+    monkeypatch.setattr("order.models.PurchaseOrder", mock_cls)
+    return mock_cls
+
+
+@pytest.fixture()
+def mock_sales_order_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Provide a mock SalesOrder model class."""
+    mock_cls = MagicMock()
+    _make_fluent_qs(mock_cls)
+    monkeypatch.setattr("order.models.SalesOrder", mock_cls)
+    return mock_cls
+
+
+@pytest.fixture()
+def mock_build_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Provide a mock Build model class."""
+    mock_cls = MagicMock()
+    _make_fluent_qs(mock_cls)
+    monkeypatch.setattr("build.models.Build", mock_cls)
     return mock_cls

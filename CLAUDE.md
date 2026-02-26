@@ -111,7 +111,7 @@ Automated via `python-semantic-release` in `.github/workflows/release.yml`. Trig
 
 An `inventree` MCP server is configured in `.mcp.json` and points to the local integration test stack (`http://localhost:8000`). When the stack is running, the following tools are available directly — use them instead of making raw HTTP requests or suggesting curl commands:
 
-`list_parts`, `get_part`, `search_parts`, `create_part`, `update_part`, `delete_parts`, `list_stock_items`, `get_stock_item`, `adjust_stock`, `transfer_stock`, `list_locations`, `get_location`, `get_location_tree`, `list_categories`, `get_category`, `get_category_tree`, `list_purchase_orders`, `get_purchase_order`, `list_sales_orders`, `get_sales_order`, `list_bom_items`, `get_bom_for_part`, `list_build_orders`, `get_build_order`, `list_tags`, `search_tags`
+`list_parts`, `get_part`, `search_parts`, `create_part`, `update_part`, `delete_parts`, `list_stock_items`, `get_stock_item`, `adjust_stock`, `transfer_stock`, `stock_by_category_and_location`, `list_locations`, `get_location`, `get_location_tree`, `list_categories`, `get_category`, `get_category_tree`, `list_purchase_orders`, `get_purchase_order`, `list_sales_orders`, `get_sales_order`, `list_bom_items`, `get_bom_for_part`, `list_build_orders`, `get_build_order`, `list_tags`, `search_tags`
 
 **Always prefer these MCP tools** for any inventory query or mutation. Do not use WebFetch, Bash curl, or the InvenTree REST API directly.
 

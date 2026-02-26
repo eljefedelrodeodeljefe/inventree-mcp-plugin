@@ -7,35 +7,8 @@ __all__: list[str] = []
 
 from typing import Any
 
-from typing_extensions import TypedDict
-
 from ...mcp_server import mcp
-from ...tools import django_orm
-
-
-class CategorySummary(TypedDict):
-    id: int
-    name: str
-    description: str
-    parent: int | None
-    pathstring: str
-
-
-class CategoryDetail(TypedDict):
-    id: int
-    name: str
-    description: str
-    parent: int | None
-    pathstring: str
-    parts_count: int
-    children_count: int
-
-
-class CategoryNode(TypedDict):
-    id: int
-    name: str
-    description: str
-    children: list[Any]  # recursive: list[CategoryNode]
+from ...tools import _project, django_orm
 
 
 @mcp.tool()
@@ -44,58 +17,77 @@ def list_categories(
     parent_id: int | None = None,
     limit: int = 100,
     offset: int = 0,
-) -> list[CategorySummary]:
+    fields: list[str] | None = None,
+) -> list[dict[str, Any]]:
     """List part categories with optional parent filtering.
 
     Args:
         parent_id: Filter by parent category ID. Use None for root categories.
         limit: Maximum number of results.
         offset: Number of results to skip.
+        fields: Fields to include. Available: id, name, description, parent, pathstring.
+                Defaults to all. ``id`` is always included.
     """
     from part.models import PartCategory
 
+    # PartCategory is a TreeBeard model — skip .only() to avoid internal field conflicts.
     queryset = PartCategory.objects.all()
     if parent_id is not None:
         queryset = queryset.filter(parent_id=parent_id)
 
     categories = queryset.order_by("name")[offset : offset + limit]
     return [
-        {
-            "id": cat.pk,
-            "name": cat.name,
-            "description": cat.description,
-            "parent": cat.parent_id,
-            "pathstring": cat.pathstring,
-        }
+        _project(
+            {
+                "id": cat.pk,
+                "name": cat.name,
+                "description": cat.description,
+                "parent": cat.parent_id,
+                "pathstring": cat.pathstring,
+            },
+            fields,
+        )
         for cat in categories
     ]
 
 
 @mcp.tool()
 @django_orm
-def get_category(category_id: int) -> CategoryDetail:
+def get_category(
+    category_id: int,
+    fields: list[str] | None = None,
+) -> dict[str, Any]:
     """Get detailed information about a part category.
 
     Args:
         category_id: The ID of the part category.
+        fields: Fields to include. Available: id, name, description, parent, pathstring,
+                parts_count, children_count. Defaults to all. ``id`` is always included.
     """
     from part.models import PartCategory
 
+    want = set(fields) if fields is not None else None
+
     cat = PartCategory.objects.get(pk=category_id)
-    return {
-        "id": cat.pk,
-        "name": cat.name,
-        "description": cat.description,
-        "parent": cat.parent_id,
-        "pathstring": cat.pathstring,
-        "parts_count": cat.parts.count(),
-        "children_count": cat.children.count(),
-    }
+    row: dict[str, Any] = {"id": cat.pk}
+    if want is None or "name" in want:
+        row["name"] = cat.name
+    if want is None or "description" in want:
+        row["description"] = cat.description
+    if want is None or "parent" in want:
+        row["parent"] = cat.parent_id
+    if want is None or "pathstring" in want:
+        row["pathstring"] = cat.pathstring
+    if want is None or "parts_count" in want:
+        row["parts_count"] = cat.parts.count()
+    if want is None or "children_count" in want:
+        row["children_count"] = cat.children.count()
+    return row
 
 
 @mcp.tool()
 @django_orm
-def get_category_tree(root_id: int | None = None) -> list[CategoryNode]:
+def get_category_tree(root_id: int | None = None) -> list[dict[str, Any]]:
     """Get a fully recursive tree of part categories using a single database query.
 
     Fetches all categories at once and assembles the hierarchy in memory,
@@ -115,7 +107,7 @@ def get_category_tree(root_id: int | None = None) -> list[CategoryNode]:
     for cat in all_cats:
         children_map[cat.parent_id].append(cat)
 
-    def _build(parent: int | None) -> list[CategoryNode]:
+    def _build(parent: int | None) -> list[dict[str, Any]]:
         return [
             {
                 "id": cat.pk,

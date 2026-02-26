@@ -118,12 +118,13 @@ curl -s http://your-inventree-instance/api/user/token/ \
 
 #### Tool permission reference
 
+##### Simple tools
+
 | Tool | InvenTree Role(s) | Minimum Permission |
 |------|-------------------|--------------------|
 | `list_parts`, `get_part`, `search_parts` | Part | view |
 | `create_part` | Part, Part Category | add (part), view (category) |
 | `update_part` | Part | change |
-| `delete_parts` | Part | delete |
 | `list_stock_items`, `get_stock_item` | Stock Item | view |
 | `adjust_stock` | Stock Item | change |
 | `transfer_stock` | Stock Item, Stock Location | change (stock), view (location) |
@@ -134,6 +135,13 @@ curl -s http://your-inventree-instance/api/user/token/ \
 | `list_bom_items`, `get_bom_for_part` | Part | view |
 | `list_build_orders`, `get_build_order` | Build | view |
 | `list_tags`, `search_tags` | — | view |
+
+##### Combinatory tools
+
+| Tool | InvenTree Role(s) | Minimum Permission |
+|------|-------------------|--------------------|
+| `delete_parts` | Part | delete |
+| `stock_by_category_and_location` | Stock Item, Part Category, Stock Location | view |
 
 ## Usage with MCP Clients
 
@@ -266,6 +274,10 @@ Common prompts to use once the MCP is connected to your AI assistant. Paste them
 
 ## Available Tools
 
+### Simple — single-resource CRUD
+
+#### Parts
+
 | Tool | Description |
 |------|-------------|
 | `list_parts` | List parts with optional category/active filters |
@@ -273,27 +285,63 @@ Common prompts to use once the MCP is connected to your AI assistant. Paste them
 | `search_parts` | Search parts by name or description |
 | `create_part` | Create a new part |
 | `update_part` | Update an existing part |
-| `delete_parts` | Delete multiple parts by ID (with safety checks) |
+
+#### Stock
+
+| Tool | Description |
+|------|-------------|
 | `list_stock_items` | List stock items with optional filters |
 | `get_stock_item` | Get detailed stock item information |
 | `adjust_stock` | Add or remove stock quantity |
 | `transfer_stock` | Transfer stock to a different location |
+
+#### Locations
+
+| Tool | Description |
+|------|-------------|
 | `list_locations` | List stock locations |
 | `get_location` | Get location details |
 | `get_location_tree` | Get hierarchical location tree |
+
+#### Categories
+
+| Tool | Description |
+|------|-------------|
 | `list_categories` | List part categories |
 | `get_category` | Get category details |
 | `get_category_tree` | Get hierarchical category tree |
+
+#### Orders
+
+| Tool | Description |
+|------|-------------|
 | `list_purchase_orders` | List purchase orders |
 | `get_purchase_order` | Get purchase order with line items |
 | `list_sales_orders` | List sales orders |
 | `get_sales_order` | Get sales order with line items |
+
+#### BOM & Builds
+
+| Tool | Description |
+|------|-------------|
 | `list_bom_items` | List BOM items |
 | `get_bom_for_part` | Get full BOM for a part |
 | `list_build_orders` | List build orders |
 | `get_build_order` | Get build order details |
+
+#### Tags
+
+| Tool | Description |
+|------|-------------|
 | `list_tags` | List all tags |
 | `search_tags` | Search tags by name |
+
+### Combinatory — multi-resource operations
+
+| Tool | Description |
+|------|-------------|
+| `delete_parts` | Delete multiple parts by ID (with safety checks) |
+| `stock_by_category_and_location` | Stock quantity pivot by category and location |
 
 ## Development
 
