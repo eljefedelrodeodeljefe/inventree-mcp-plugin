@@ -59,6 +59,7 @@ Key files:
 - **Python**: 3.11+ only. No backcompat shims.
 - **Dependencies**: `mcp>=1.9` is the only production dependency. Django and InvenTree are provided by the plugin host environment — do not add them to `pyproject.toml`.
 - **Unit tests**: mock the entire InvenTree/Django module tree via `conftest.py`. Tests must run with `uv run pytest` and no InvenTree instance.
+- **Tool list sync**: when adding, removing, or renaming tools, always update the tool list in both `README.md` and the "Working with the live InvenTree instance" section of this file.
 
 ## Git workflow
 
@@ -93,13 +94,14 @@ Breaking changes must include `BREAKING CHANGE:` in the commit footer.
 
 ## CI
 
-Three jobs in `.github/workflows/ci.yml`:
+Four jobs in `.github/workflows/ci.yml`:
 
 | Job | What it does |
 |-----|-------------|
-| `lint` | `ruff check` + `ruff format --check` |
+| `lint` | `ruff check` + `ruff format --check` + `mypy` |
 | `pre-commit` | `prek run --all-files` via `j178/prek-action@v1` |
 | `test` | `pytest -v` |
+| `smoke` | Spins up the Docker integration stack and runs `integration-test.sh smoke` |
 
 ## Releases
 
