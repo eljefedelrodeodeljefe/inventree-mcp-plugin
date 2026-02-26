@@ -52,3 +52,18 @@ jobs:
 
       - name: Run tests
         run: uv run pytest -v
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start InvenTree stack, seed data, and install plugin
+        run: ./scripts/integration-test.sh up
+
+      - name: Run smoke tests
+        run: ./scripts/integration-test.sh smoke
+
+      - name: Tear down stack
+        if: always()
+        run: ./scripts/integration-test.sh down
