@@ -2,9 +2,46 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+
+
+class StockItemSummary(TypedDict):
+    id: int
+    part: int
+    part_name: str
+    quantity: float
+    location: int | None
+    serial: str | None
+    batch: str | None
+
+
+class StockItemDetail(TypedDict):
+    id: int
+    part: int
+    part_name: str
+    quantity: float
+    location: int | None
+    location_name: str | None
+    serial: str | None
+    batch: str | None
+    status: int
+    notes: str
+    updated: str | None
+
+
+class StockAdjustResult(TypedDict):
+    id: int
+    quantity: float
+    notes: str
+
+
+class StockTransferResult(TypedDict):
+    id: int
+    quantity: float
+    location: int | None
+    location_name: str | None
 
 
 @mcp.tool()
@@ -13,7 +50,7 @@ def list_stock_items(
     location_id: int | None = None,
     limit: int = 100,
     offset: int = 0,
-) -> list[dict[str, Any]]:
+) -> list[StockItemSummary]:
     """List stock items with optional filtering.
 
     Args:
@@ -46,7 +83,7 @@ def list_stock_items(
 
 
 @mcp.tool()
-def get_stock_item(stock_item_id: int) -> dict[str, Any]:
+def get_stock_item(stock_item_id: int) -> StockItemDetail:
     """Get detailed information about a specific stock item.
 
     Args:
@@ -71,7 +108,7 @@ def get_stock_item(stock_item_id: int) -> dict[str, Any]:
 
 
 @mcp.tool()
-def adjust_stock(stock_item_id: int, quantity: float, notes: str = "") -> dict[str, Any]:
+def adjust_stock(stock_item_id: int, quantity: float, notes: str = "") -> StockAdjustResult:
     """Adjust the quantity of a stock item (add or remove stock).
 
     Args:
@@ -98,7 +135,7 @@ def adjust_stock(stock_item_id: int, quantity: float, notes: str = "") -> dict[s
 
 
 @mcp.tool()
-def transfer_stock(stock_item_id: int, location_id: int, notes: str = "") -> dict[str, Any]:
+def transfer_stock(stock_item_id: int, location_id: int, notes: str = "") -> StockTransferResult:
     """Transfer a stock item to a different location.
 
     Args:

@@ -4,7 +4,34 @@ from __future__ import annotations
 
 from typing import Any
 
+from typing_extensions import TypedDict
+
 from ...mcp_server import mcp
+
+
+class LocationSummary(TypedDict):
+    id: int
+    name: str
+    description: str
+    parent: int | None
+    pathstring: str
+
+
+class LocationDetail(TypedDict):
+    id: int
+    name: str
+    description: str
+    parent: int | None
+    pathstring: str
+    items_count: int
+    children_count: int
+
+
+class LocationNode(TypedDict):
+    id: int
+    name: str
+    description: str
+    children: list[Any]  # recursive: list[LocationNode]
 
 
 @mcp.tool()
@@ -12,7 +39,7 @@ def list_locations(
     parent_id: int | None = None,
     limit: int = 100,
     offset: int = 0,
-) -> list[dict[str, Any]]:
+) -> list[LocationSummary]:
     """List stock locations with optional parent filtering.
 
     Args:
@@ -40,7 +67,7 @@ def list_locations(
 
 
 @mcp.tool()
-def get_location(location_id: int) -> dict[str, Any]:
+def get_location(location_id: int) -> LocationDetail:
     """Get detailed information about a stock location.
 
     Args:
@@ -61,7 +88,7 @@ def get_location(location_id: int) -> dict[str, Any]:
 
 
 @mcp.tool()
-def get_location_tree(parent_id: int | None = None, max_depth: int = 3) -> list[dict[str, Any]]:
+def get_location_tree(parent_id: int | None = None, max_depth: int = 3) -> list[LocationNode]:
     """Get a hierarchical tree of stock locations.
 
     Args:
@@ -70,7 +97,7 @@ def get_location_tree(parent_id: int | None = None, max_depth: int = 3) -> list[
     """
     from stock.models import StockLocation
 
-    def _build_tree(parent: int | None, depth: int) -> list[dict[str, Any]]:
+    def _build_tree(parent: int | None, depth: int) -> list[LocationNode]:
         if depth <= 0:
             return []
         locations = StockLocation.objects.filter(parent_id=parent).order_by("name")

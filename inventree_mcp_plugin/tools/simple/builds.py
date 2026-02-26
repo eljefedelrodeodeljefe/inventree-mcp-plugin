@@ -2,9 +2,36 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+
+
+class BuildSummary(TypedDict):
+    id: int
+    reference: str
+    part: int
+    part_name: str
+    quantity: float
+    status: int
+    creation_date: str | None
+    target_date: str | None
+    completed: float
+
+
+class BuildDetail(TypedDict):
+    id: int
+    reference: str
+    part: int
+    part_name: str
+    quantity: float
+    completed: float
+    status: int
+    creation_date: str | None
+    target_date: str | None
+    completion_date: str | None
+    notes: str
+    destination: int | None
 
 
 @mcp.tool()
@@ -13,7 +40,7 @@ def list_build_orders(
     active: bool | None = None,
     limit: int = 100,
     offset: int = 0,
-) -> list[dict[str, Any]]:
+) -> list[BuildSummary]:
     """List build orders with optional filtering.
 
     Args:
@@ -48,7 +75,7 @@ def list_build_orders(
 
 
 @mcp.tool()
-def get_build_order(build_id: int) -> dict[str, Any]:
+def get_build_order(build_id: int) -> BuildDetail:
     """Get detailed information about a build order.
 
     Args:

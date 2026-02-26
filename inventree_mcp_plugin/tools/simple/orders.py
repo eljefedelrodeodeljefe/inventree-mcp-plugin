@@ -2,9 +2,74 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+
+
+class PurchaseOrderSummary(TypedDict):
+    id: int
+    reference: str
+    supplier: int
+    supplier_name: str | None
+    status: int
+    description: str
+    creation_date: str | None
+    target_date: str | None
+
+
+class PurchaseOrderLineItem(TypedDict):
+    id: int
+    part: int | None
+    part_name: str | None
+    quantity: float
+    received: float
+    reference: str
+
+
+class PurchaseOrderDetail(TypedDict):
+    id: int
+    reference: str
+    supplier: int
+    supplier_name: str | None
+    status: int
+    description: str
+    creation_date: str | None
+    target_date: str | None
+    lines: list[PurchaseOrderLineItem]
+    total_price: str | None
+
+
+class SalesOrderSummary(TypedDict):
+    id: int
+    reference: str
+    customer: int
+    customer_name: str | None
+    status: int
+    description: str
+    creation_date: str | None
+    target_date: str | None
+
+
+class SalesOrderLineItem(TypedDict):
+    id: int
+    part: int | None
+    part_name: str | None
+    quantity: float
+    shipped: float
+    reference: str
+
+
+class SalesOrderDetail(TypedDict):
+    id: int
+    reference: str
+    customer: int
+    customer_name: str | None
+    status: int
+    description: str
+    creation_date: str | None
+    target_date: str | None
+    lines: list[SalesOrderLineItem]
 
 
 @mcp.tool()
@@ -13,7 +78,7 @@ def list_purchase_orders(
     outstanding: bool | None = None,
     limit: int = 100,
     offset: int = 0,
-) -> list[dict[str, Any]]:
+) -> list[PurchaseOrderSummary]:
     """List purchase orders with optional filtering.
 
     Args:
@@ -47,7 +112,7 @@ def list_purchase_orders(
 
 
 @mcp.tool()
-def get_purchase_order(order_id: int) -> dict[str, Any]:
+def get_purchase_order(order_id: int) -> PurchaseOrderDetail:
     """Get detailed information about a purchase order.
 
     Args:
@@ -56,7 +121,7 @@ def get_purchase_order(order_id: int) -> dict[str, Any]:
     from order.models import PurchaseOrder
 
     order = PurchaseOrder.objects.get(pk=order_id)
-    lines = [
+    lines: list[PurchaseOrderLineItem] = [
         {
             "id": line.pk,
             "part": line.part.pk if line.part else None,
@@ -87,7 +152,7 @@ def list_sales_orders(
     outstanding: bool | None = None,
     limit: int = 100,
     offset: int = 0,
-) -> list[dict[str, Any]]:
+) -> list[SalesOrderSummary]:
     """List sales orders with optional filtering.
 
     Args:
@@ -121,7 +186,7 @@ def list_sales_orders(
 
 
 @mcp.tool()
-def get_sales_order(order_id: int) -> dict[str, Any]:
+def get_sales_order(order_id: int) -> SalesOrderDetail:
     """Get detailed information about a sales order.
 
     Args:
@@ -130,7 +195,7 @@ def get_sales_order(order_id: int) -> dict[str, Any]:
     from order.models import SalesOrder
 
     order = SalesOrder.objects.get(pk=order_id)
-    lines = [
+    lines: list[SalesOrderLineItem] = [
         {
             "id": line.pk,
             "part": line.part.pk if line.part else None,

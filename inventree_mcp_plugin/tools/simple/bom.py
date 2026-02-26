@@ -2,9 +2,38 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing_extensions import TypedDict
 
 from ...mcp_server import mcp
+
+
+class BomItemSummary(TypedDict):
+    id: int
+    part: int
+    part_name: str
+    sub_part: int
+    sub_part_name: str
+    quantity: float
+    reference: str
+    optional: bool
+
+
+class BomItemDetail(TypedDict):
+    id: int
+    sub_part: int
+    sub_part_name: str
+    quantity: float
+    reference: str
+    optional: bool
+    consumable: bool
+    allow_variants: bool
+    inherited: bool
+
+
+class BomResult(TypedDict):
+    part_id: int
+    part_name: str
+    bom_items: list[BomItemDetail]
 
 
 @mcp.tool()
@@ -13,7 +42,7 @@ def list_bom_items(
     sub_part_id: int | None = None,
     limit: int = 100,
     offset: int = 0,
-) -> list[dict[str, Any]]:
+) -> list[BomItemSummary]:
     """List BOM items with optional filtering.
 
     Args:
@@ -47,7 +76,7 @@ def list_bom_items(
 
 
 @mcp.tool()
-def get_bom_for_part(part_id: int) -> dict[str, Any]:
+def get_bom_for_part(part_id: int) -> BomResult:
     """Get the full BOM (Bill of Materials) for a specific part.
 
     Args:

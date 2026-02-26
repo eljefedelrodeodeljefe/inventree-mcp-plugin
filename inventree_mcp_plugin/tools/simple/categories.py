@@ -4,7 +4,34 @@ from __future__ import annotations
 
 from typing import Any
 
+from typing_extensions import TypedDict
+
 from ...mcp_server import mcp
+
+
+class CategorySummary(TypedDict):
+    id: int
+    name: str
+    description: str
+    parent: int | None
+    pathstring: str
+
+
+class CategoryDetail(TypedDict):
+    id: int
+    name: str
+    description: str
+    parent: int | None
+    pathstring: str
+    parts_count: int
+    children_count: int
+
+
+class CategoryNode(TypedDict):
+    id: int
+    name: str
+    description: str
+    children: list[Any]  # recursive: list[CategoryNode]
 
 
 @mcp.tool()
@@ -12,7 +39,7 @@ def list_categories(
     parent_id: int | None = None,
     limit: int = 100,
     offset: int = 0,
-) -> list[dict[str, Any]]:
+) -> list[CategorySummary]:
     """List part categories with optional parent filtering.
 
     Args:
@@ -40,7 +67,7 @@ def list_categories(
 
 
 @mcp.tool()
-def get_category(category_id: int) -> dict[str, Any]:
+def get_category(category_id: int) -> CategoryDetail:
     """Get detailed information about a part category.
 
     Args:
@@ -61,7 +88,7 @@ def get_category(category_id: int) -> dict[str, Any]:
 
 
 @mcp.tool()
-def get_category_tree(parent_id: int | None = None, max_depth: int = 3) -> list[dict[str, Any]]:
+def get_category_tree(parent_id: int | None = None, max_depth: int = 3) -> list[CategoryNode]:
     """Get a hierarchical tree of part categories.
 
     Args:
@@ -70,7 +97,7 @@ def get_category_tree(parent_id: int | None = None, max_depth: int = 3) -> list[
     """
     from part.models import PartCategory
 
-    def _build_tree(parent: int | None, depth: int) -> list[dict[str, Any]]:
+    def _build_tree(parent: int | None, depth: int) -> list[CategoryNode]:
         if depth <= 0:
             return []
         categories = PartCategory.objects.filter(parent_id=parent).order_by("name")

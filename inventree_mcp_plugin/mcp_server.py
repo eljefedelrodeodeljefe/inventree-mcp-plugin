@@ -10,6 +10,7 @@ mcp = FastMCP(
 )
 
 # Import tool modules to trigger @mcp.tool() registration
+from .tools.combinatory import parts as _combinatory_parts  # noqa: E402, F401
 from .tools.simple import bom as _bom  # noqa: E402, F401
 from .tools.simple import builds as _builds  # noqa: E402, F401
 from .tools.simple import categories as _categories  # noqa: E402, F401
