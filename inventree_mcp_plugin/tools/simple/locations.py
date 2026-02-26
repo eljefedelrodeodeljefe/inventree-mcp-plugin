@@ -95,27 +95,35 @@ def get_location(location_id: int) -> LocationDetail:
 
 @mcp.tool()
 @django_orm
-def get_location_tree(parent_id: int | None = None, max_depth: int = 3) -> list[LocationNode]:
-    """Get a hierarchical tree of stock locations.
+def get_location_tree(root_id: int | None = None) -> list[LocationNode]:
+    """Get a fully recursive tree of stock locations using a single database query.
+
+    Fetches all locations at once and assembles the hierarchy in memory,
+    so the result is complete regardless of tree depth.
 
     Args:
-        parent_id: Root location ID. Use None for the full tree from root.
-        max_depth: Maximum depth to traverse.
+        root_id: Location ID whose children form the tree root.
+                 Use None to return the complete tree starting from all top-level locations.
     """
+    from collections import defaultdict
+
     from stock.models import StockLocation
 
-    def _build_tree(parent: int | None, depth: int) -> list[LocationNode]:
-        if depth <= 0:
-            return []
-        locations = StockLocation.objects.filter(parent_id=parent).order_by("name")
+    all_locs = list(StockLocation.objects.all().order_by("name"))
+
+    children_map: dict[int | None, list[Any]] = defaultdict(list)
+    for loc in all_locs:
+        children_map[loc.parent_id].append(loc)
+
+    def _build(parent: int | None) -> list[LocationNode]:
         return [
             {
                 "id": loc.pk,
                 "name": loc.name,
                 "description": loc.description,
-                "children": _build_tree(loc.pk, depth - 1),
+                "children": _build(loc.pk),
             }
-            for loc in locations
+            for loc in children_map[parent]
         ]
 
-    return _build_tree(parent_id, max_depth)
+    return _build(root_id)

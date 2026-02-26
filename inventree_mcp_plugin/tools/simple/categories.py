@@ -95,27 +95,35 @@ def get_category(category_id: int) -> CategoryDetail:
 
 @mcp.tool()
 @django_orm
-def get_category_tree(parent_id: int | None = None, max_depth: int = 3) -> list[CategoryNode]:
-    """Get a hierarchical tree of part categories.
+def get_category_tree(root_id: int | None = None) -> list[CategoryNode]:
+    """Get a fully recursive tree of part categories using a single database query.
+
+    Fetches all categories at once and assembles the hierarchy in memory,
+    so the result is complete regardless of tree depth.
 
     Args:
-        parent_id: Root category ID. Use None for the full tree from root.
-        max_depth: Maximum depth to traverse.
+        root_id: Category ID whose children form the tree root.
+                 Use None to return the complete tree starting from all top-level categories.
     """
+    from collections import defaultdict
+
     from part.models import PartCategory
 
-    def _build_tree(parent: int | None, depth: int) -> list[CategoryNode]:
-        if depth <= 0:
-            return []
-        categories = PartCategory.objects.filter(parent_id=parent).order_by("name")
+    all_cats = list(PartCategory.objects.all().order_by("name"))
+
+    children_map: dict[int | None, list[Any]] = defaultdict(list)
+    for cat in all_cats:
+        children_map[cat.parent_id].append(cat)
+
+    def _build(parent: int | None) -> list[CategoryNode]:
         return [
             {
                 "id": cat.pk,
                 "name": cat.name,
                 "description": cat.description,
-                "children": _build_tree(cat.pk, depth - 1),
+                "children": _build(cat.pk),
             }
-            for cat in categories
+            for cat in children_map[parent]
         ]
 
-    return _build_tree(parent_id, max_depth)
+    return _build(root_id)
